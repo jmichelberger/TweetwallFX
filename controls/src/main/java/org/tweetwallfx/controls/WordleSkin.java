@@ -151,6 +151,16 @@ public class WordleSkin extends SkinBase<Wordle> {
         prepareStepMachine();
     }
 
+    private void sizePropertyChanged() {
+        switch (getSkinnable().layoutModeProperty.get()) {
+            case TWEET:
+                break;
+            case WORDLE:
+                updateCloud();
+                break;
+        }
+    }
+    
     private void updateLogo(final String newLogo) {
         if (null != logo) {
             pane.getChildren().remove(logo);
