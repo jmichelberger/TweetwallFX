@@ -125,35 +125,17 @@ public class WordleSkin extends SkinBase<Wordle> {
         updateCloud();
 
         wordle.wordsProperty.addListener((obs, oldValue, newValue) -> {
-            switch (wordle.layoutModeProperty.get()) {
-                case TWEET:
-                    break;
-                case WORDLE:
-                    updateCloud();
-                    break;
-            }
+            sizePropertyChanged();
         });
 
         pane.widthProperty().addListener(bounds -> {
             logo.setLayoutY(pane.getHeight() - logo.getImage().getHeight());
-            switch (wordle.layoutModeProperty.get()) {
-                case TWEET:
-                    break;
-                case WORDLE:
-                    updateCloud();
-                    break;
-            }
+            sizePropertyChanged();
         });
 
         pane.heightProperty().addListener(bounds -> {
             logo.setLayoutY(pane.getHeight() - logo.getImage().getHeight());
-            switch (wordle.layoutModeProperty.get()) {
-                case TWEET:
-                    break;
-                case WORDLE:
-                    updateCloud();
-                    break;
-            }
+            sizePropertyChanged();
         });
 
         wordle.layoutModeProperty.addListener((obs, oldVModee, newMode) -> {
@@ -173,6 +155,16 @@ public class WordleSkin extends SkinBase<Wordle> {
         displayCloudTags = wordle.displayedNumberOfTagsProperty().get();
     }
 
+    private void sizePropertyChanged() {
+        switch (getSkinnable().layoutModeProperty.get()) {
+            case TWEET:
+                break;
+            case WORDLE:
+                updateCloud();
+                break;
+        }
+    }
+    
     private void updateLogo(final String newLogo) {
         if (null != logo) {
             pane.getChildren().remove(logo);
