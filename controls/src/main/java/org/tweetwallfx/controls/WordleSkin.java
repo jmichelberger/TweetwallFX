@@ -25,14 +25,11 @@ package org.tweetwallfx.controls;
 
 import de.jensd.fx.glyphs.GlyphsStack;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +48,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.SkinBase;
-import javafx.scene.effect.SepiaTone;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -64,6 +60,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.Duration;
 import org.apache.log4j.Logger;
+import org.tweetwallfx.controls.transition.FontSizeTransition;
+import org.tweetwallfx.controls.transition.LocationTransition;
+import org.tweetwallfx.controls.util.ImageCache;
 import org.tweetwallfx.tweet.api.Tweet;
 
 /**
@@ -433,6 +432,10 @@ public class WordleSkin extends SkinBase<Wordle> {
         fadeOuts.getChildren().addAll(fadeOutTransitions);
         SequentialTransition morph = new SequentialTransition(fadeOuts, moves, fadeIns);
 
+        morph.onFinishedProperty().addListener(cl -> {
+            notifyFinished();
+        });
+        
         morph.play();
     }
 
@@ -534,6 +537,10 @@ public class WordleSkin extends SkinBase<Wordle> {
         fadeIns.getChildren().addAll(fadeInTransitions);
         SequentialTransition morph = new SequentialTransition(fadeOuts, moves, fadeIns);
 
+        morph.onFinishedProperty().addListener(cl -> {
+            notifyFinished();
+        });
+
         morph.play();
     }
 
@@ -619,9 +626,18 @@ public class WordleSkin extends SkinBase<Wordle> {
         ParallelTransition fadeIns = new ParallelTransition();
         fadeIns.getChildren().addAll(fadeInTransitions);
         morph.getChildren().add(fadeIns);
+        
+        morph.onFinishedProperty().addListener(cl -> {
+            notifyFinished();
+        });
+        
         morph.play();
     }
 
+    private void notifyFinished() {
+        //for future use :-)
+    }
+    
     private final Font defaultFont = Font.font("Calibri", FontWeight.BOLD, MINIMUM_FONT_SIZE);
 
     private double getFontSize(double weight) {
@@ -768,75 +784,6 @@ public class WordleSkin extends SkinBase<Wordle> {
         return boundsMap;
     }
 
-    private static class LocationTransition extends Transition {
-
-        private final Node node;
-        private double startX;
-        private double startY;
-        private double targetY;
-        private double targetX;
-
-        public LocationTransition(Duration duration, Node node) {
-            setCycleDuration(duration);
-            this.node = node;
-        }
-
-        public void setFromX(double startX) {
-            this.startX = startX;
-        }
-
-        public void setFromY(double startY) {
-            this.startY = startY;
-        }
-
-        public void setToX(double targetX) {
-            this.targetX = targetX;
-        }
-
-        public void setToY(double targetY) {
-            this.targetY = targetY;
-        }
-
-        @Override
-        protected void interpolate(double frac) {
-            if (!Double.isNaN(startX)) {
-                node.setLayoutX(startX + frac * (targetX - startX));
-            }
-            if (!Double.isNaN(startY)) {
-                node.setLayoutY(startY + frac * (targetY - startY));
-            }
-        }
-
-    }
-
-    private static class FontSizeTransition extends Transition {
-
-        private final Text node;
-        private double startSize;
-        private double toSize;
-
-        public FontSizeTransition(Duration duration, Text node) {
-            setCycleDuration(duration);
-            this.node = node;
-        }
-
-        public void setFromSize(double startSize) {
-            this.startSize = startSize;
-        }
-
-        public void setToSize(double toSize) {
-            this.toSize = toSize;
-        }
-
-        @Override
-        protected void interpolate(double frac) {
-            if (!Double.isNaN(startSize)) {
-                node.setFont(Font.font(node.getFont().getFamily(), startSize + frac * (toSize - startSize)));
-            }
-        }
-
-    }
-
     private static class TweetWord {
 
         Bounds bounds;
@@ -865,59 +812,4 @@ public class WordleSkin extends SkinBase<Wordle> {
         }
 
     }
-
-    private static class ImageCache {
-    
-        private final int maxSize;
-        private final Map<String, Reference<Image>> cache = new HashMap<>();
-        private final LinkedList<String> lru = new LinkedList<>();
-        private final ImageCreator creator;
-
-        public ImageCache(final ImageCreator creator) {
-            this.creator = creator;
-            maxSize = 10;
-        }
-        
-        public Image get(final String url) {
-            Image image;
-            Reference<Image> imageRef = cache.get(url);
-            if (null == imageRef || (null == (image = imageRef.get()))) {
-                image = creator.create(url);
-                cache.put(url, new SoftReference<>(image));
-                lru.addFirst(url);
-            } else {
-                if (!url.equals(lru.peekFirst())) {
-                    lru.remove(url);
-                    lru.addFirst(url);
-                }
-            }
-
-            if (lru.size() > maxSize) {
-                String oldest = lru.removeLast();
-                cache.remove(oldest);
-            }
-            
-            return image;
-        }
-
-        public static interface ImageCreator {
-            Image create(String url);
-        }
-        
-        public static class DefaultImageCreator implements ImageCreator {
-
-            @Override
-            public Image create(final String url) {
-                return new Image(url);
-            }
-        }
-        public static class ProfileImageCreator implements ImageCreator {
-
-            @Override
-            public Image create(final String url) {
-                return new Image(url, 64, 64, true, false);
-            }
-        }
-    }
-    
 }
