@@ -21,23 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine.test.steps;
+package org.tweetwallfx.controls.stepengine.test.steps;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.util.Duration;
-import org.tweetwallfx.controls.stepmachine.AbstractStep;
-import org.tweetwallfx.controls.stepmachine.StepMachine.MachineContext;
+import org.tweetwallfx.controls.stepengine.AbstractStep;
+import org.tweetwallfx.controls.stepengine.StepEngine.MachineContext;
 import org.tweetwallfx.controls.transition.LocationTransition;
 
 /**
  *
- * @author Jörg
+ * @author Jörg Michelberger
  */
-public class ToRightLowerStep extends AbstractStep {
-    private static final Logger LOG = Logger.getLogger(ToRightLowerStep.class.getName());
+public class ToCenterStep extends AbstractStep {
+    private static final Logger LOG = Logger.getLogger(ToCenterStep.class.getName());
+    
+    private static final String SKIP = "ToCenterStep.Skip";
 
     @Override
     public int preferredStepDuration(MachineContext context) {
@@ -45,17 +47,30 @@ public class ToRightLowerStep extends AbstractStep {
     }
 
     @Override
+    public void initStep(MachineContext context) {
+        context.put(SKIP, Boolean.FALSE);
+    }
+
+    @Override
+    public boolean shouldSkip(MachineContext context) {
+        Boolean skip = (Boolean)context.get(SKIP);
+        context.put(SKIP, skip?Boolean.FALSE:Boolean.TRUE);
+        return skip;
+    }
+
+    
+    @Override
     public void doStep(MachineContext context) {
-        LOG.log(Level.INFO, "Enter ToRightLowerStep.doStep()");
+        LOG.log(Level.INFO, "Enter ToCenterStep.doStep()");
         Node n = (Node)context.get("Button");
         LocationTransition t = new LocationTransition(Duration.seconds(2), n);
         t.setFromX(n.getLayoutX());
         t.setFromY(n.getLayoutY());
-        t.setToX(200);
-        t.setToY(200);
+        t.setToX(150);
+        t.setToY(150);
         
         t.setOnFinished(e -> context.proceed());
         Platform.runLater(() -> t.play());
-        LOG.log(Level.INFO, "Exit ToRightLowerStep.doStep()");
+        LOG.log(Level.INFO, "Exit ToCenterStep.doStep()");
     }
 }

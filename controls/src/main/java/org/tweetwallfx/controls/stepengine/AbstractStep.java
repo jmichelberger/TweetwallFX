@@ -21,18 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine;
+
+package org.tweetwallfx.controls.stepengine;
 
 /**
  *
  * @author Jörg Michelberger
  */
-public interface Step {
-    void initStep(StepMachine.MachineContext context);
-    boolean shouldSkip(StepMachine.MachineContext context);
-    void prepareStep(StepMachine.MachineContext context);
-    void doStep(StepMachine.MachineContext context);
-    void leaveStep(StepMachine.MachineContext context);
-    int preferredStepDuration(StepMachine.MachineContext context);
-    String getName();
+public abstract class AbstractStep implements Step {
+
+    @Override
+    public void initStep(StepEngine.MachineContext context) {
+    }
+
+    @Override
+    public boolean shouldSkip(StepEngine.MachineContext context) {
+        return false;
+    }
+    
+    @Override
+    public void prepareStep(StepEngine.MachineContext context) {
+    }
+
+    @Override
+    public void leaveStep(StepEngine.MachineContext context) {
+    }
+
+    @Override
+    public String getName() {
+        return getClass().getName();
+    }
+
+    
 }

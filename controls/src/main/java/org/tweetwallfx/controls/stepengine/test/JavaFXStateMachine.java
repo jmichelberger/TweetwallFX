@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine.test;
+package org.tweetwallfx.controls.stepengine.test;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -33,17 +33,17 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import org.tweetwallfx.controls.stepmachine.StepIterator;
-import org.tweetwallfx.controls.stepmachine.StepMachine;
-import org.tweetwallfx.controls.stepmachine.test.steps.ToCenterStep;
-import org.tweetwallfx.controls.stepmachine.test.steps.ToLeftLowerStep;
-import org.tweetwallfx.controls.stepmachine.test.steps.ToLeftUpperStep;
-import org.tweetwallfx.controls.stepmachine.test.steps.ToRightLowerStep;
-import org.tweetwallfx.controls.stepmachine.test.steps.ToRightUpperStep;
+import org.tweetwallfx.controls.stepengine.StepIterator;
+import org.tweetwallfx.controls.stepengine.StepEngine;
+import org.tweetwallfx.controls.stepengine.test.steps.ToCenterStep;
+import org.tweetwallfx.controls.stepengine.test.steps.ToLeftLowerStep;
+import org.tweetwallfx.controls.stepengine.test.steps.ToLeftUpperStep;
+import org.tweetwallfx.controls.stepengine.test.steps.ToRightLowerStep;
+import org.tweetwallfx.controls.stepengine.test.steps.ToRightUpperStep;
 
 /**
  *
- * @author Jörg
+ * @author Jörg Michelberger
  */
 public class JavaFXStateMachine extends Application {
     
@@ -91,7 +91,7 @@ public class JavaFXStateMachine extends Application {
                 new ToLeftLowerStep()
         ));
         
-        StepMachine s = new StepMachine(steps);
+        StepEngine s = new StepEngine(steps);
         s.getContext().put("Button", button);
         
         tickTockExecutor.execute(new Runnable() {

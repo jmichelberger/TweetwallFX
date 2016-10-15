@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine;
+package org.tweetwallfx.controls.stepengine;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,8 +35,8 @@ import java.util.logging.Logger;
  *
  * @author Jörg Michelberger
  */
-public final class StepMachine {
-    private static final Logger LOG = Logger.getLogger(StepMachine.class.getName());
+public final class StepEngine {
+    private static final Logger LOG = Logger.getLogger(StepEngine.class.getName());
     private volatile boolean terminated = false;
     
     private final Lock lock = new ReentrantLock();
@@ -46,7 +46,7 @@ public final class StepMachine {
 
     private final MachineContext context = new MachineContext();
     
-    public StepMachine(StepIterator stateIterator) {
+    public StepEngine(StepIterator stateIterator) {
         this.stateIterator = stateIterator;
         //initialize every step with context
         stateIterator.applyWith((step) -> step.initStep(context));
@@ -69,7 +69,7 @@ public final class StepMachine {
         
         public void proceed() {
             LOG.log(Level.INFO, "Enter proceed()");
-            StepMachine.this.proceed();
+            StepEngine.this.proceed();
         }
     }
 
