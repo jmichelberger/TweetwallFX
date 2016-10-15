@@ -21,20 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine.test.steps;
+package org.tweetwallfx.controls.stepengine.test.steps;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.util.Duration;
-import org.tweetwallfx.controls.stepmachine.AbstractStep;
-import org.tweetwallfx.controls.stepmachine.StepMachine.MachineContext;
+import org.tweetwallfx.controls.stepengine.AbstractStep;
+import org.tweetwallfx.controls.stepengine.StepEngine.MachineContext;
 import org.tweetwallfx.controls.transition.LocationTransition;
 
 /**
  *
- * @author Jörg
+ * @author Jörg Michelberger
  */
 public class ToRightUpperStep extends AbstractStep {
     private static final Logger LOG = Logger.getLogger(ToRightUpperStep.class.getName());

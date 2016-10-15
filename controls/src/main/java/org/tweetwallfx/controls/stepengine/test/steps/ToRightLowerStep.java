@@ -21,47 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.tweetwallfx.controls.stepmachine;
+package org.tweetwallfx.controls.stepengine.test.steps;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.util.Duration;
+import org.tweetwallfx.controls.stepengine.AbstractStep;
+import org.tweetwallfx.controls.stepengine.StepEngine.MachineContext;
+import org.tweetwallfx.controls.transition.LocationTransition;
 
 /**
  *
  * @author Jörg Michelberger
  */
-public class StepIterator {
-    private Step current = null;
-    private int stateIndex = 0;
-    private final List<Step> states = new ArrayList<>();
+public class ToRightLowerStep extends AbstractStep {
+    private static final Logger LOG = Logger.getLogger(ToRightLowerStep.class.getName());
 
-    public StepIterator(List<Step> states) {
-        this.states.addAll(states);
+    @Override
+    public int preferredStepDuration(MachineContext context) {
+        return 3000;
     }
-    
-    void applyWith(Consumer<Step> consumer) {
-        states.forEach(consumer);
-    }
-    
-    public Step getCurrent() {
-        return current;
-    }
-    
-    public Step getNext() {
-        int getIndex = stateIndex;
-        if (getIndex == states.size()) {
-            getIndex = 0;
-        }
-        return states.get(getIndex);
-    }
-    
-    public Step next() {
-        if (stateIndex == states.size()) {
-            //loop
-            stateIndex = 0;
-        }
-        current = states.get(stateIndex++);
-        return current;
+
+    @Override
+    public void doStep(MachineContext context) {
+        LOG.log(Level.INFO, "Enter ToRightLowerStep.doStep()");
+        Node n = (Node)context.get("Button");
+        LocationTransition t = new LocationTransition(Duration.seconds(2), n);
+        t.setFromX(n.getLayoutX());
+        t.setFromY(n.getLayoutY());
+        t.setToX(200);
+        t.setToY(200);
+        
+        t.setOnFinished(e -> context.proceed());
+        Platform.runLater(() -> t.play());
+        LOG.log(Level.INFO, "Exit ToRightLowerStep.doStep()");
     }
 }

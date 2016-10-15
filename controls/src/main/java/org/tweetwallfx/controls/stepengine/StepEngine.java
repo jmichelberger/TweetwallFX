@@ -30,7 +30,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Platform;
 
 /**
  *
@@ -98,12 +97,12 @@ public final class StepEngine {
                 LOG.info("Skip step: " + step.getName());
                 step = stateIterator.next();
             }
-            final Step stepToExecute = step;
+            
             long duration = step.preferredStepDuration(context);
-            LOG.log(Level.INFO, "call "+stepToExecute.getName()+"doStep()");
+            LOG.log(Level.INFO, "call "+step.getName()+"doStep()");
             lock.lock();
             try {
-            Platform.runLater(() -> stepToExecute.doStep(context));
+            step.doStep(context);
             long stop = System.currentTimeMillis();
             long doStateDuration = stop - start;
             long delay = duration - doStateDuration;
