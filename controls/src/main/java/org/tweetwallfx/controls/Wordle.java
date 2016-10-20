@@ -53,7 +53,7 @@ public class Wordle extends Control {
     }
 
     ObjectProperty<List<Word>> wordsProperty = new SimpleObjectProperty<>(new ArrayList<>());
-    ObjectProperty<Tweet> tweetInfoProperty = new SimpleObjectProperty<>();
+    public ObjectProperty<Tweet> tweetInfoProperty = new SimpleObjectProperty<>();
 
     ObjectProperty<LayoutMode> layoutModeProperty = new SimpleObjectProperty<>(LayoutMode.WORDLE);
     private SimpleStyleableStringProperty logo;
@@ -212,6 +212,7 @@ public class Wordle extends Control {
         private static final CssMetaData<Wordle, Number> DISPLAYED_TAGS_NUMBER
                 = new CssMetaData<Wordle, Number>("-fx-display-tag-num",
                         new StyleConverter<String, Number>() {
+                    @Override
                     public Integer convert(ParsedValue<String, Number> value, Font not_used) {
                         String str = value.getValue();
                         System.out.println("Initial value for display tags num: " + str);

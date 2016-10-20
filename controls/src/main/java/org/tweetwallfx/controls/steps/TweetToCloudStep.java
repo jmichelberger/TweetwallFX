@@ -24,8 +24,28 @@
 package org.tweetwallfx.controls.steps;
 
 //import org.tweetwallfx.controls.Wordle;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.SequentialTransition;
+import javafx.animation.Transition;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.text.Text;
+import javafx.util.Duration;
+import org.apache.log4j.Logger;
+import org.tweetwallfx.controls.Word;
+import org.tweetwallfx.controls.Wordle;
+import org.tweetwallfx.controls.WordleSkin;
 import org.tweetwallfx.controls.stepengine.AbstractStep;
 import org.tweetwallfx.controls.stepengine.StepEngine.MachineContext;
+import org.tweetwallfx.controls.transition.FontSizeTransition;
+import org.tweetwallfx.controls.transition.LocationTransition;
 
 /**
  *
@@ -41,6 +61,108 @@ public class TweetToCloudStep extends AbstractStep {
     @Override
     public void doStep(MachineContext context) {
 //        context.getWordle().setLayoutMode(Wordle.LayoutMode.TWEET);
-        context.proceed();
+        Logger startupLogger = Logger.getLogger("org.tweetwallfx.startup");
+        startupLogger.trace("tweetToCloud()");
+        
+        WordleSkin wordleSkin = (WordleSkin)context.get("WordleSkin");
+        Wordle wordle = (Wordle)context.get("Wordle");
+        
+        List<Word> sortedWords = new ArrayList<>(wordle.wordsProperty().getValue());
+
+        if (sortedWords.isEmpty()) {
+            return;
+        }
+
+        List<Word> limitedWords = sortedWords.stream().limit(wordleSkin.getDisplayCloudTags()).collect(Collectors.toList());
+        limitedWords.sort(Comparator.reverseOrder());
+
+        Support.getDefault().setMax(limitedWords.get(0).getWeight());
+        Support.getDefault().setMin(limitedWords.stream().filter(w -> w.getWeight() > 0).min(Comparator.naturalOrder()).get().getWeight());
+
+        Map<Word, Bounds> boundsMap = Support.recalcTagLayout(limitedWords, wordleSkin.getPane(), wordleSkin.getLogo());
+        Duration defaultDuration = Duration.seconds(1.5);
+
+        List<Transition> fadeOutTransitions = new ArrayList<>();
+        List<Transition> moveTransitions = new ArrayList<>();
+        List<Transition> fadeInTransitions = new ArrayList<>();
+        
+        Bounds layoutBounds = wordleSkin.getPane().getLayoutBounds();
+
+        boundsMap.entrySet().stream().forEach(entry -> {
+            Word word = entry.getKey();
+            Bounds bounds = entry.getValue();
+            Optional<TweetWordNode> optionalTweetWord = wordleSkin.tweetWordList.stream().filter(tweetWordNode -> tweetWordNode.getTweetWord().getText().trim().equals(word.getText())).findFirst();
+            if (optionalTweetWord.isPresent()) {
+                boolean removed = wordleSkin.tweetWordList.remove(optionalTweetWord.get());
+                Text textNode = optionalTweetWord.get().getTextNode();
+
+                wordleSkin.word2TextMap.put(word, textNode);
+                LocationTransition lt = new LocationTransition(defaultDuration, textNode);
+
+                lt.setFromX(textNode.getLayoutX());
+                lt.setFromY(textNode.getLayoutY());
+                lt.setToX(bounds.getMinX() + layoutBounds.getWidth() / 2d);
+                lt.setToY(bounds.getMinY() + layoutBounds.getHeight() / 2d + bounds.getHeight() / 2d);
+                moveTransitions.add(lt);
+
+                FontSizeTransition ft = new FontSizeTransition(defaultDuration, textNode);
+                ft.setFromSize(textNode.getFont().getSize());
+                ft.setToSize(Support.getFontSize(word.getWeight()));
+                moveTransitions.add(ft);
+
+            } else {
+                Text textNode = Support.createTextNode(word);
+
+                wordleSkin.word2TextMap.put(word, textNode);
+                textNode.setLayoutX(bounds.getMinX() + layoutBounds.getWidth() / 2d);
+                textNode.setLayoutY(bounds.getMinY() + layoutBounds.getHeight() / 2d + bounds.getHeight() / 2d);
+                textNode.setOpacity(0);
+                wordleSkin.getPane().getChildren().add(textNode);
+                FadeTransition ft = new FadeTransition(defaultDuration, textNode);
+                ft.setToValue(1);
+                fadeInTransitions.add(ft);
+            }
+        });
+
+        wordleSkin.tweetWordList.forEach(tweetWord -> {
+            FadeTransition ft = new FadeTransition(defaultDuration, tweetWord.getTextNode());
+            ft.setToValue(0);
+            ft.setOnFinished((event) -> {
+                wordleSkin.getPane().getChildren().remove(tweetWord.getTextNode());
+            });
+            fadeOutTransitions.add(ft);
+        });
+
+        wordleSkin.tweetWordList.clear();
+
+        if (null != wordleSkin.getInfoBox()) {
+            Node infoBoxNode = wordleSkin.getInfoBox();
+            FadeTransition ft = new FadeTransition(defaultDuration, infoBoxNode);
+            ft.setToValue(0);
+            ft.setOnFinished(event -> {
+                wordleSkin.getPane().getChildren().remove(infoBoxNode);
+            });
+            fadeOutTransitions.add(ft);
+        }
+        if (null != wordleSkin.getMediaBox()) {
+            Node mediaBoxNode = wordleSkin.getMediaBox();
+            FadeTransition ft = new FadeTransition(defaultDuration, mediaBoxNode);
+            ft.setToValue(0);
+            ft.setOnFinished(event -> {
+                wordleSkin.getPane().getChildren().remove(mediaBoxNode);
+            });
+            fadeOutTransitions.add(ft);
+        }
+        
+        ParallelTransition fadeOuts = new ParallelTransition();
+        fadeOuts.getChildren().addAll(fadeOutTransitions);
+        ParallelTransition moves = new ParallelTransition();
+        moves.getChildren().addAll(moveTransitions);
+        ParallelTransition fadeIns = new ParallelTransition();
+        fadeIns.getChildren().addAll(fadeInTransitions);
+        SequentialTransition morph = new SequentialTransition(fadeOuts, moves, fadeIns);
+
+        morph.setOnFinished(e -> context.proceed());
+        morph.play();
     }
 }
