@@ -54,7 +54,7 @@ public class Wordle extends Control {
     }
 
     ObjectProperty<List<Word>> wordsProperty = new SimpleObjectProperty<>(new ArrayList<>());
-    ObjectProperty<Tweet> tweetInfoProperty = new SimpleObjectProperty<>();
+    public ObjectProperty<Tweet> tweetInfoProperty = new SimpleObjectProperty<>();
 
     ObjectProperty<LayoutMode> layoutModeProperty = new SimpleObjectProperty<>(LayoutMode.WORDLE);
     private SimpleStyleableStringProperty logo;

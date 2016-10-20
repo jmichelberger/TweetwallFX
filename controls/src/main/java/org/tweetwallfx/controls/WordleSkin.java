@@ -150,16 +150,16 @@ public class WordleSkin extends SkinBase<Wordle> {
         font = wordle.fontProperty().get();
         prepareStepMachine();
     }
-
-    private void sizePropertyChanged() {
-        switch (getSkinnable().layoutModeProperty.get()) {
-            case TWEET:
-                break;
-            case WORDLE:
-                updateCloud();
-                break;
-        }
-    }
+//
+//    private void sizePropertyChanged() {
+//        switch (getSkinnable().layoutModeProperty.get()) {
+//            case TWEET:
+//                break;
+//            case WORDLE:
+//                updateCloud();
+//                break;
+//        }
+//    }
     
     private void updateLogo(final String newLogo) {
         if (null != logo) {
