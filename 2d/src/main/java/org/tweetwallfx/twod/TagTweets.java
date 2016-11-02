@@ -52,7 +52,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tweetwallfx.tweet.StopList;
 import org.tweetwallfx.controls.Word;
 import org.tweetwallfx.controls.Wordle;
@@ -75,7 +76,7 @@ import org.tweetwallfx.tweet.api.entry.UserMentionTweetEntry;
 public class TagTweets {
 
     private static final String STARTUP = "org.tweetwallfx.startup";
-    Logger startupLogger = Logger.getLogger(STARTUP);
+    Logger startupLogger = LogManager.getLogger(STARTUP);
 
     private final static int MIN_WEIGHT = 4;
     private final static int NUM_MAX_WORDS = 40;

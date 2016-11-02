@@ -34,8 +34,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.tweetwallfx.config.Configuration;
 import org.tweetwallfx.tweet.StopList;
 import org.tweetwallfx.tweet.StringPropertyAppender;
@@ -49,7 +50,7 @@ import org.tweetwallfx.tweet.TweetSetData;
 public class Main extends Application {
 
     private static final String STARTUP = "org.tweetwallfx.startup";
-    Logger startupLogger = Logger.getLogger(STARTUP);
+    Logger startupLogger = LogManager.getLogger(STARTUP);
     
     private static final String query = Configuration.getInstance().getConfig("tweetwall.twitter.query");
     private static final String title = Configuration.getInstance().getConfig("tweetwall.title");
@@ -67,13 +68,12 @@ public class Main extends Application {
         }        
         
         StopList.add(query);
-        startupLogger.addAppender(new StringPropertyAppender());
-        startupLogger.setLevel(Level.TRACE);
 
         HBox statusLineHost = new HBox();
         Text statusLineText = new Text();
         statusLineText.getStyleClass().addAll("statusline");
-        statusLineText.textProperty().bind(((StringPropertyAppender)startupLogger.getAppender(StringPropertyAppender.class.getName())).stringProperty());
+        statusLineText.setId("loggingStatusLineText");
+//        statusLineText.textProperty().bind(((StringPropertyAppender)startupLogger.getAppender(StringPropertyAppender.class.getName())).stringProperty());
         statusLineHost.getChildren().add(statusLineText);
         
         final Service<Void> service = new Service<Void>() {
@@ -107,16 +107,16 @@ public class Main extends Application {
             primaryStage.close();
         });
         
-        scene.setOnKeyTyped((KeyEvent event) -> {
-            if (event.isMetaDown() && event.getCharacter().equals("d")) {
+//        scene.setOnKeyTyped((KeyEvent event) -> {
+//            if (event.isAltDown() && event.getCharacter().equals("d")) {
                 if (null == statusLineHost.getParent()) {
                     borderPane.setBottom(statusLineHost);
                 }
                 else {
                     borderPane.getChildren().remove(statusLineHost);
                 }
-            }
-        });
+//            }
+//        });
 
         primaryStage.setTitle(title);
         primaryStage.setScene(scene);

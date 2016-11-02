@@ -52,7 +52,6 @@ import org.fxyz.extras.Skybox;
 import org.fxyz.tests.SkyBoxTest;
 import org.tweetwallfx.threed.billboard.DevoxxBillboardLogo;
 import org.tweetwallfx.tweet.api.Tweeter;
-import org.tweetwallfx.twitter.CLogOut;
 
 /**
  * TweetWallFX - Devoxx 2014 {@literal @}johanvos {@literal @}SvenNB
@@ -89,7 +88,6 @@ public class TweetWallFX extends Application {
             back = new Image(SkyBoxTest.class.getResource("res/back.png").toExternalForm());
 
     private Tweeter tweeter;
-    private CLogOut log;
     private static final String hashtag = "#Google";
     private TweetsToTori tweetsTask;
 
@@ -187,9 +185,6 @@ public class TweetWallFX extends Application {
         root.setAutoSizeChildren(true);
 
         /* TWITTER */
-        log = CLogOut.getInstance();
-        log.getMessages().addListener((ob, s, s1) -> System.out.println(s1));
-
         final Service<Void> service = new Service<Void>() {
             @Override
             protected Task<Void> createTask() {

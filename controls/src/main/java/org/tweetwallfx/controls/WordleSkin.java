@@ -23,6 +23,8 @@
  */
 package org.tweetwallfx.controls;
 
+import com.sun.javafx.stage.StageHelper;
+import java.io.Serializable;
 import org.tweetwallfx.controls.util.ImageCache;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -31,16 +33,38 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.SkinBase;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginElement;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.tweetwallfx.controls.stepengine.StepEngine;
 import org.tweetwallfx.controls.stepengine.StepIterator;
 import org.tweetwallfx.controls.steps.CloudToTweetStep;
@@ -51,7 +75,7 @@ import org.tweetwallfx.controls.steps.UpdateCloudStep;
  * @author sven
  */
 public class WordleSkin extends SkinBase<Wordle> {
-        
+    private static final Logger startupLogger = LogManager.getLogger("org.tweetwallfx.startup");
     public static final int TWEET_FONT_SIZE = 54;
     public static final int MINIMUM_FONT_SIZE = 36;
     public static final int MAX_FONT_SIZE = 72;
@@ -134,6 +158,34 @@ public class WordleSkin extends SkinBase<Wordle> {
         //assign style
         stackPane.getStylesheets().add(this.getClass().getResource("wordle.css").toExternalForm());
         
+        final TextArea loggingTextArea = new TextArea();
+
+        GridPane gridpane = new GridPane();
+        gridpane.setPadding(new Insets(5));
+        gridpane.setHgap(10);
+        gridpane.setVgap(10);
+        loggingTextArea.setPrefRowCount(10);
+        loggingTextArea.setPrefColumnCount(100);
+        loggingTextArea.setWrapText(true);
+        loggingTextArea.setPrefWidth(600);
+        GridPane.setHalignment(loggingTextArea, HPos.CENTER);
+        gridpane.add(loggingTextArea, 0, 1);
+        loggingTextArea.setText("The logging area!\n");
+        loggingTextArea.setOpacity(0.5);
+        loggingTextArea.setId("loggingTextArea");   //for accessibility via log4j
+
+//        stackPane.setOnKeyTyped((KeyEvent event) -> {
+//            if (event.isAltDown() && event.getCharacter().equals("d")) {
+                if (null == gridpane.getParent()) {
+                    stackPane.getChildren().add(gridpane);
+                }
+                else {
+                    stackPane.getChildren().remove(gridpane);
+                }
+//            }
+//        });
+//        stackPane.getChildren().add(gridpane);
+        
         getSkinnable().logoProperty().addListener((obs, oldValue, newValue) -> {
             updateLogo(newValue);
         });
@@ -205,6 +257,7 @@ public class WordleSkin extends SkinBase<Wordle> {
         });
     
     public void prepareStepMachine() {
+        startupLogger.info("Prepare StepMachine");
         StepIterator steps = new StepIterator(Arrays.asList(new UpdateCloudStep(),
                 new CloudToTweetStep(),
                 new TweetToCloudStep()
@@ -219,6 +272,69 @@ public class WordleSkin extends SkinBase<Wordle> {
                 s.go();
             }
         });
+        startupLogger.info("Prepare StepMachine done");        
     }
+   
+    @Plugin(name = "TextAreaAppender", category = "Core", elementType = "appender", printObject = true)
+    public static class TextAreaAppender extends AbstractAppender {
+        private TextArea textArea;
+        
+        protected TextAreaAppender(String name, Filter filter,
+                Layout<? extends Serializable> layout, final boolean ignoreExceptions, final String selector) {
+            super(name, filter, layout, ignoreExceptions);
+            StageHelper.getStages().addListener(new ListChangeListener<Stage>() {
+                @Override
+                public void onChanged(ListChangeListener.Change<? extends Stage> c) {
+                    bind(selector);
+                }
+            });
+        }
+        
+        private void bind(final String selector) {
+            if (null == textArea) {
+                Optional<Node> findFirst = StageHelper.getStages().stream().map(stage-> stage.getScene().lookup(selector)).findFirst();
+                if (findFirst.isPresent()) {
+                    textArea = (TextArea)findFirst.get();
+                } else {
+                    System.err.println("TextAreaAppender selector=" + selector +" not found!");
+                    textArea = null;
+                }
+            }
+        }
 
+        // The append method is where the appender does the work.
+        // Given a log event, you are free to do with it what you want.
+        // This example demonstrates:
+        // 1. Concurrency: this method may be called by multiple threads concurrently
+        // 2. How to use layouts
+        // 3. Error handling
+        @Override
+        public void append(LogEvent event) {
+            System.out.println(event.getMessage().getFormattedMessage());
+            if (null != textArea) {
+                textArea.appendText(event.getMessage().getFormattedMessage());
+                textArea.appendText("\n");
+            }
+        }
+        // Your custom appender needs to declare a factory method
+        // annotated with `@PluginFactory`. Log4j will parse the configuration
+        // and call this factory method to construct an appender instance with
+        // the configured attributes.
+
+        @PluginFactory
+        public static TextAreaAppender createAppender(
+                @PluginAttribute("name") String name,
+                @PluginElement("Layout") Layout<? extends Serializable> layout,
+                @PluginElement("Filter") final Filter filter,
+                @PluginAttribute("selector") String selector) {
+            if (name == null) {
+                LOGGER.error("No name provided for TextAreaAppender");
+                return null;
+            }
+            if (layout == null) {
+                layout = PatternLayout.createDefaultLayout();
+            }
+            return new TextAreaAppender(name, filter, layout, true, selector);
+        }
+    }
 }
